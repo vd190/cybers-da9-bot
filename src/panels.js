@@ -1,32 +1,69 @@
-// الرسائل الثابتة: القوانين، التحقق، طرق الدفع، طريقة الشراء، التذاكر
+// الرسائل الثابتة (عربي + إنجليزي): القوانين، التحقق، طرق الدفع، طريقة الشراء، التذاكر...
 const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
   AttachmentBuilder,
+  EmbedBuilder,
 } = require('discord.js');
+const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 const db = require('./db');
 const { embed, channel, ASSETS } = require('./util');
 
-const banner = () => new AttachmentBuilder(path.join(ASSETS, 'banner.png'), { name: 'banner.png' });
+const LINE = '━━━━━━━━━━━━━━━━━━';
+const SPACER = '​';
+
+// صورة القسم (assets/panels/<name>.png) — وإذا ما لقاها يرجع للبانر العام
+function art(name) {
+  const file = path.join(ASSETS, 'panels', `${name}.png`);
+  if (fs.existsSync(file)) return { file: new AttachmentBuilder(file, { name: `${name}.png` }), url: `attachment://${name}.png` };
+  return { file: new AttachmentBuilder(path.join(ASSETS, 'banner.png'), { name: 'banner.png' }), url: 'attachment://banner.png' };
+}
+
+// رسالة فيها صورة القسم فوق والشرح تحتها
+async function sendWithArt(ch, name, embeds, components = []) {
+  const a = art(name);
+  const header = new EmbedBuilder().setColor(embeds[0]?.data.color ?? config.color).setImage(a.url);
+  await ch.send({ embeds: [header, ...embeds], components, files: [a.file] });
+}
 
 const RULES = [
-  ['🤝 الاحترام', 'احترم الجميع. ممنوع السب، الشتم، العنصرية، التنمر أو أي إساءة بأي شكل.'],
-  ['🚫 النشر والإعلانات', 'ممنوع نشر روابط سيرفرات أو حسابات أو مواقع، وممنوع الإعلان بالخاص لأعضاء السيرفر.'],
-  ['📛 السبام', 'ممنوع السبام، تكرار الرسائل، المنشن الجماعي، أو إزعاج الإدارة بالمنشن.'],
-  ['💸 الشراء الرسمي فقط', 'الشراء يكون **فقط** عن طريق التذاكر الرسمية في السيرفر. أي تعامل خارجها على مسؤوليتك.'],
-  ['🕵️ الاحتيال', 'أي محاولة نصب أو تحايل أو تزوير إثبات دفع = **باند نهائي** بدون نقاش.'],
-  ['🎭 الانتحال', 'ممنوع انتحال شخصية الإدارة أو المتجر. الإدارة **ما تراسلك خاص أولاً أبداً**.'],
-  ['🛒 البيع الخارجي', 'ممنوع بيع أو عرض منتجات داخل السيرفر — هذا متجر رسمي وليس سوق مفتوح.'],
-  ['🎫 التذاكر', 'لا تفتح تذكرة بدون سبب، ولا تفتح أكثر من تذكرة لنفس الطلب.'],
-  ['🔞 المحتوى', 'ممنوع أي محتوى غير لائق، سياسي، ديني جدلي أو مخالف.'],
-  ['📜 شروط ديسكورد', 'الالتزام بـ [شروط استخدام ديسكورد](https://discord.com/terms) و [إرشادات المجتمع](https://discord.com/guidelines).'],
+  ['🤝', 'الاحترام', 'Respect',
+    'احترم الجميع — ممنوع السب والعنصرية والتنمر بأي شكل.',
+    'Respect everyone — no insults, racism or bullying of any kind.'],
+  ['🚫', 'النشر والإعلانات', 'No Advertising',
+    'ممنوع نشر روابط سيرفرات أو حسابات، وممنوع الإعلان بالخاص.',
+    'No server/account links and no advertising in DMs.'],
+  ['📛', 'السبام', 'No Spam',
+    'ممنوع تكرار الرسائل والمنشن الجماعي وإزعاج الإدارة.',
+    'No repeated messages, mass mentions or pinging staff.'],
+  ['💸', 'الشراء الرسمي فقط', 'Official Purchases Only',
+    'الشراء فقط عن طريق تذاكر السيرفر — غيرها على مسؤوليتك.',
+    'Buy only through server tickets — anything else is at your own risk.'],
+  ['🕵️', 'الاحتيال', 'Fraud',
+    'أي محاولة نصب أو تزوير إثبات دفع = باند نهائي.',
+    'Any scam attempt or fake payment proof = permanent ban.'],
+  ['🎭', 'الانتحال', 'Impersonation',
+    'ممنوع انتحال الإدارة — الإدارة ما تراسلك خاص أولاً أبداً.',
+    'Do not impersonate staff — staff will never DM you first.'],
+  ['🛒', 'البيع الخارجي', 'No Reselling',
+    'ممنوع بيع أو عرض أي منتجات داخل السيرفر.',
+    'Selling or offering products inside the server is not allowed.'],
+  ['🎫', 'التذاكر', 'Tickets',
+    'لا تفتح تذكرة بدون سبب، ولا أكثر من تذكرة لنفس الطلب.',
+    'No pointless tickets, and only one ticket per order.'],
+  ['🔞', 'المحتوى', 'Content',
+    'ممنوع أي محتوى غير لائق أو سياسي أو ديني جدلي.',
+    'No NSFW, political or controversial religious content.'],
+  ['📜', 'شروط ديسكورد', 'Discord ToS',
+    'الالتزام بـ [شروط ديسكورد](https://discord.com/terms) و [إرشادات المجتمع](https://discord.com/guidelines).',
+    'Follow the [Discord Terms](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines).'],
 ];
 
 async function clearBotMessages(ch) {
-  const msgs = await ch.messages.fetch({ limit: 50 }).catch(() => null);
+  const msgs = await ch.messages.fetch({ limit: 100 }).catch(() => null);
   if (!msgs) return;
   for (const m of msgs.values()) {
     if (m.author.id === ch.client.user.id) await m.delete().catch(() => {});
@@ -35,164 +72,229 @@ async function clearBotMessages(ch) {
 
 const builders = {
   async rules(ch) {
-    const e = embed()
-      .setTitle('📜 قوانين سيرفر Cybers DA9')
-      .setDescription(
-        'أهلاً فيك في **Cybers DA9** 🛒\nبدخولك للسيرفر أنت توافق على جميع القوانين التالية:\n​',
-      )
-      .setImage('attachment://banner.png');
-    RULES.forEach(([title, text], i) => e.addFields({ name: `${i + 1}. ${title}`, value: text }));
-    const penalties = embed(config.colors.danger)
-      .setTitle('⚖️ العقوبات')
+    const intro = embed()
+      .setTitle('📜 قوانين السيرفر • Server Rules')
       .setDescription(
         [
-          '`1` تحذير تلقائي من البوت',
-          `\`${config.protection.warnLimit}\` تحذيرات = تايم أوت ${config.protection.warnTimeoutHours} ساعة`,
-          '`🚨` النصب / الاحتيال / التخريب = **باند نهائي فوري**',
-          '',
-          '> الإدارة لها الحق في تعديل القوانين أو معاقبة أي شخص يضر بالسيرفر.',
+          'بدخولك للسيرفر أنت توافق على القوانين التالية 👇',
+          'By joining the server you agree to the following rules 👇',
         ].join('\n'),
       );
-    await ch.send({ embeds: [e, penalties], files: [banner()] });
+    RULES.forEach(([emoji, ar, en, tAr, tEn], i) => {
+      intro.addFields({ name: `${i + 1}. ${emoji} ${ar} • ${en}`, value: `${tAr}\n*${tEn}*` });
+    });
+    const penalties = embed(config.colors.danger)
+      .setTitle('⚖️ العقوبات • Penalties')
+      .setDescription(
+        [
+          '⚠️ **مخالفة بسيطة:** تحذير تلقائي من البوت',
+          '*Minor offence: automatic warning*',
+          '',
+          `⏳ **${config.protection.warnLimit} تحذيرات:** تايم أوت ${config.protection.warnTimeoutHours} ساعة`,
+          `*${config.protection.warnLimit} warnings: ${config.protection.warnTimeoutHours}h timeout*`,
+          '',
+          '🚨 **نصب / احتيال / تخريب:** باند نهائي فوري',
+          '*Scam / fraud / sabotage: instant permanent ban*',
+        ].join('\n'),
+      );
+    await sendWithArt(ch, 'rules', [intro, penalties]);
   },
 
   async verify(ch) {
-    const e = embed()
-      .setTitle('🛡️ التحقق')
+    const e = embed(0x00ffa3)
+      .setTitle('🛡️ التحقق • Verification')
       .setDescription(
         [
-          'عشان تقدر تشوف المتجر والرومات لازم تتحقق إنك **شخص حقيقي** 👤',
+          'عشان تشوف المتجر لازم تثبت إنك **شخص حقيقي** 👤',
+          'To access the store, prove you are a **real person** 👤',
           '',
-          '**الخطوات:**',
-          '`1` اضغط زر **تحقق** تحت',
-          '`2` بيطلع لك رمز — اضغط **إدخال الرمز** واكتبه',
-          '`3` تنعطى رتبة العضو وتنفتح لك كل الرومات ✅',
+          LINE,
+          '**`1`** اضغط **تحقق** تحت • Click **Verify** below',
+          '**`2`** اكتب الرمز اللي يطلع لك • Type the code you get',
+          '**`3`** تنفتح لك كل الرومات ✅ • All channels unlock ✅',
+          LINE,
           '',
           '> ⚠️ الحسابات الجديدة جداً تنطرد تلقائياً للحماية.',
+          '> *Very new accounts are removed automatically for security.*',
         ].join('\n'),
       );
     const row = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId('verify:start').setLabel('تحقق').setEmoji('✅').setStyle(ButtonStyle.Success),
+      new ButtonBuilder().setCustomId('verify:start').setLabel('تحقق • Verify').setEmoji('✅').setStyle(ButtonStyle.Success),
     );
-    await ch.send({ embeds: [e], components: [row] });
+    await sendWithArt(ch, 'verify', [e], [row]);
   },
 
   async payments(ch) {
-    const e = embed()
-      .setTitle('💳 طرق الدفع المتاحة')
+    const e = embed(0xffd166)
+      .setTitle('💳 طرق الدفع • Payment Methods')
       .setDescription(
-        `${config.payments.map((p) => `${p.emoji} **${p.name}**\n> ${p.note}`).join('\n\n')}\n\n`
-          + '❌ **ما نقبل أي طريقة دفع ثانية.**\n'
-          + '⚠️ **عنوان المحفظة وتفاصيل الدفع ترسل داخل التذكرة فقط من الإدارة.**\n'
-          + 'لا ترسل كود كرت لأي أحد بالخاص — أي شخص يطلبه منك خارج التذكرة = **محتال**، بلّغ عنه فوراً.',
+        [
+          ...config.payments.flatMap((p) => [
+            `${p.emoji} **${p.name} • ${p.nameEn}**`,
+            `> ${p.note}`,
+            `> *${p.noteEn}*`,
+            '',
+          ]),
+          LINE,
+          '❌ **ما نقبل أي طريقة دفع ثانية.**',
+          '*No other payment methods are accepted.*',
+          '',
+          '⚠️ **تفاصيل الدفع ترسل داخل التذكرة فقط من الإدارة.**',
+          '*Payment details are only sent inside your ticket by staff.*',
+          '',
+          '🚫 أي أحد يطلب منك كود كرت أو تحويل بالخاص = **محتال**.',
+          '*Anyone asking for a card code or transfer in DMs = **scammer**.*',
+        ].join('\n'),
       );
-    await ch.send({ embeds: [e] });
+    await sendWithArt(ch, 'payments', [e]);
   },
 
   async howto(ch) {
     const steps = embed()
-      .setTitle('📖 طريقة الشراء')
+      .setTitle('📖 طريقة الشراء • How to Buy')
       .setDescription(
         [
-          `\`1\` تصفح المنتجات في <#${db.data.channels.products}>`,
-          '`2` اضغط زر **🛒 شراء** تحت المنتج أو افتح تذكرة **شراء منتج**',
-          '`3` الإدارة بترد عليك داخل التذكرة — الدفع **كروت** أو **USDT** فقط',
-          '`4` أرسل الكرت (الكود + صورته) أو **إثبات تحويل USDT** (هاش العملية) داخل التذكرة',
-          '`5` تستلم طلبك ✅ وبعدها تقدر تقيّمنا ⭐',
+          `**\`1\`** 🛍️ تصفح المنتجات في <#${db.data.channels.products}>`,
+          '*Browse the products channel*',
+          '',
+          '**`2`** 🛒 اضغط **شراء** تحت المنتج',
+          '*Click **Buy** under the product — a private ticket opens*',
+          '',
+          '**`3`** 💬 الإدارة ترد عليك وترسل تفاصيل الدفع',
+          '*Staff reply with payment details*',
+          '',
+          '**`4`** 💳 أرسل الكرت أو إثبات تحويل USDT',
+          '*Send the card or your USDT transfer proof*',
+          '',
+          '**`5`** ✅ تستلم طلبك وتقدر تقيّمنا ⭐',
+          '*Receive your order and leave a review ⭐*',
         ].join('\n'),
       );
     const terms = embed(config.colors.warn)
-      .setTitle('📋 شروط الشراء')
+      .setTitle('📋 شروط الشراء • Purchase Terms')
       .setDescription(
         [
-          '• الدفع يكون **قبل** التسليم.',
-          '• **لا يوجد استرجاع** بعد استلام المنتج إلا إذا كان المنتج لا يعمل ولم يتم تعويضك.',
+          '• الدفع **قبل** التسليم. • *Payment comes **before** delivery.*',
+          '',
+          '• **لا يوجد استرجاع** بعد الاستلام إلا إذا المنتج لا يعمل.',
+          '  *No refunds after delivery unless the product does not work.*',
+          '',
           '• الكروت المستخدمة أو المزورة = **باند نهائي**.',
-          '• تحويلات USDT **نهائية** — تأكد من العنوان والشبكة قبل التحويل.',
-          '• مدة التسليم تختلف حسب المنتج وتوضح لك داخل التذكرة.',
-          '• احتفظ بإثبات الدفع حتى تستلم طلبك.',
+          '  *Used or fake cards = **permanent ban**.*',
+          '',
+          '• تحويلات USDT **نهائية** — تأكد من العنوان والشبكة.',
+          '  *USDT transfers are **final** — double-check address & network.*',
+          '',
           '• بإتمامك للشراء أنت توافق على هذه الشروط.',
+          '  *By purchasing you agree to these terms.*',
         ].join('\n'),
       );
-    await ch.send({ embeds: [steps, terms] });
+    await sendWithArt(ch, 'howto', [steps, terms]);
   },
 
   async ticketPanel(ch) {
-    const e = embed()
-      .setTitle('🎫 مركز التذاكر')
+    const e = embed(0x7a5cff)
+      .setTitle('🎫 مركز التذاكر • Ticket Center')
       .setDescription(
         [
-          'اختر نوع التذكرة المناسب وبيتم فتح روم خاص بينك وبين الإدارة 🔒',
+          'اختر نوع التذكرة وينفتح لك روم خاص مع الإدارة 🔒',
+          '*Pick a ticket type and a private room with staff opens* 🔒',
           '',
-          ...config.ticketTypes.map((t) => `${t.emoji} **${t.label}** — ${t.description}`),
+          LINE,
+          ...config.ticketTypes.flatMap((t) => [`${t.emoji} **${t.label} • ${t.labelEn}**`, `> ${t.description} • *${t.descriptionEn}*`]),
+          LINE,
           '',
-          '> ⏱️ لا تكرر فتح التذاكر، الإدارة بترد عليك بأسرع وقت.',
+          '> ⏱️ لا تكرر فتح التذاكر — نرد عليك بأسرع وقت.',
+          '> *Please don\'t open duplicate tickets — we\'ll reply ASAP.*',
         ].join('\n'),
-      )
-      .setImage('attachment://banner.png');
+      );
     const row = new ActionRowBuilder().addComponents(
       config.ticketTypes.map((t) =>
         new ButtonBuilder()
           .setCustomId(`ticket:open:${t.id}`)
-          .setLabel(t.label)
+          .setLabel(`${t.label} • ${t.labelEn}`)
           .setEmoji(t.emoji)
           .setStyle(ButtonStyle[t.style] ?? ButtonStyle.Secondary),
       ),
     );
-    await ch.send({ embeds: [e], components: [row], files: [banner()] });
+    await sendWithArt(ch, 'tickets', [e], [row]);
   },
 
   async products(ch) {
     const e = embed()
-      .setTitle('🛍️ منتجات Cybers DA9')
-      .setDescription('هنا تلقى كل منتجاتنا 👇\nاضغط **🛒 شراء** تحت أي منتج وبتنفتح لك تذكرة مباشرة.')
-      .setImage('attachment://banner.png');
-    await ch.send({ embeds: [e], files: [banner()] });
+      .setTitle('🛍️ منتجات Cybers DA9 • Our Products')
+      .setDescription(
+        [
+          'كل منتجاتنا هنا 👇 اضغط **🛒 شراء** تحت أي منتج وتنفتح لك تذكرة مباشرة.',
+          '*All our products are below 👇 Click **🛒 Buy** under any product to open a ticket.*',
+          '',
+          `💳 الدفع: كروت أو USDT — <#${db.data.channels.payments}>`,
+          `*Payment: cards or USDT*`,
+        ].join('\n'),
+      );
+    await sendWithArt(ch, 'store', [e]);
   },
 
   async announcements(ch) {
-    const e = embed()
-      .setTitle('🎉 افتتاح متجر Cybers DA9')
-      .setDescription('حياكم الله في متجر **Cybers DA9** 🛒\nتابعوا هذا الروم لكل جديد: منتجات، عروض، وتخفيضات 🔥')
-      .setImage('attachment://banner.png');
-    await ch.send({ embeds: [e], files: [banner()] });
+    const e = embed(0xff5c8a)
+      .setTitle('🎉 افتتاح متجر Cybers DA9 • Grand Opening')
+      .setDescription(
+        [
+          'حياكم الله في **Cybers DA9** 🛒',
+          'تابعوا هذا الروم لكل جديد: منتجات، عروض، وتخفيضات 🔥',
+          '',
+          '*Welcome to **Cybers DA9** 🛒*',
+          '*Follow this channel for new products, offers and discounts 🔥*',
+        ].join('\n'),
+      );
+    await sendWithArt(ch, 'announcements', [e]);
   },
 
   async reviews(ch) {
     const e = embed(config.colors.gold)
-      .setTitle('⭐ تقييمات العملاء')
-      .setDescription('كل التقييمات هنا من عملاء **حقيقيين** استلموا طلباتهم ✅\n(التقييم يتاح تلقائياً بعد استلام الطلب)');
-    await ch.send({ embeds: [e] });
+      .setTitle('⭐ تقييمات العملاء • Customer Reviews')
+      .setDescription(
+        [
+          'كل التقييمات هنا من عملاء **حقيقيين** استلموا طلباتهم ✅',
+          '*Every review here is from a **real** customer who received their order ✅*',
+          '',
+          '> التقييم يتاح تلقائياً بعد استلام الطلب.',
+          '> *You can review automatically after your order is delivered.*',
+        ].join('\n'),
+      );
+    await sendWithArt(ch, 'reviews', [e]);
   },
 
   async staff(ch) {
     const e = embed(config.colors.purple)
-      .setTitle('🔒 لوحة الإدارة')
+      .setTitle('👑 لوحة الإدارة • Admin Panel')
       .setDescription(
         [
-          '**أوامر المتجر**',
-          '`/product add` إضافة منتج • `/product status` متوفر/نفذ • `/product remove` • `/product list`',
-          '`/announce` إعلان • `/stats` إحصائيات المتجر',
+          '**🛒 المتجر • Store**',
+          '`/product add` إضافة منتج • `/product edit` تعديل (وصورة `image_url`)',
+          '`/product status` متوفر/نفذ • `/product remove` حذف • `/product list`',
+          '`/announce` إعلان • `/stats` إحصائيات',
           '',
-          '**أوامر الإدارة**',
-          '`/ban` `/unban` `/kick` `/timeout` `/untimeout` `/warn` `/warnings` `/clearwarns`',
-          '`/clear` `/lock` `/unlock` `/slowmode`',
+          '**🔨 الإدارة • Moderation**',
+          '`/ban` `/unban` `/kick` `/timeout` `/untimeout`',
+          '`/warn` `/warnings` `/clearwarns` `/clear` `/lock` `/unlock` `/slowmode`',
           '',
-          '**الحماية**',
-          '`/lockdown` قفل السيرفر كامل • `/unlockdown` • `/raidmode`',
-          '`/whitelist` القائمة البيضاء للبوتات/الأشخاص الموثوقين',
-          '`/panels` إعادة إرسال الرسائل الثابتة • `/setup` إعادة بناء السيرفر',
+          '**🛡️ الحماية • Security**',
+          '`/lockdown` قفل السيرفر • `/unlockdown` • `/raidmode`',
+          '`/whitelist` القائمة البيضاء',
           '',
-          '> داخل أي تذكرة شراء اضغط **✅ تم التسليم** بعد ما تسلّم الطلب عشان ينسجل الطلب ويقدر العميل يقيّم.',
+          '**🎨 الشكل • Appearance**',
+          '`/panels` إعادة إرسال الرسائل • `/setup` إعادة بناء السيرفر',
+          '',
+          LINE,
+          '✅ داخل تذكرة الشراء اضغط **تم التسليم** بعد ما تسلّم الطلب — ينسجل الطلب ويقدر العميل يقيّم.',
         ].join('\n'),
       );
-    await ch.send({ embeds: [e] });
+    await sendWithArt(ch, 'staff', [e]);
   },
 };
 
-// ترتيب مهم: products قبل howto عشان الرابط
 const PANEL_KEYS = ['rules', 'verify', 'announcements', 'products', 'payments', 'howto', 'ticketPanel', 'reviews', 'staff'];
-// الرسائل اللي يعاد إرسالها بأمر /panels (بدون المنتجات والتقييمات والإعلانات)
 const RESENDABLE = ['rules', 'verify', 'payments', 'howto', 'ticketPanel', 'staff'];
 
 async function sendPanel(guild, key, { clear = false } = {}) {
@@ -207,4 +309,4 @@ async function sendAllPanels(guild, keys = PANEL_KEYS, opts) {
   for (const key of keys) await sendPanel(guild, key, opts);
 }
 
-module.exports = { sendPanel, sendAllPanels, PANEL_KEYS, RESENDABLE };
+module.exports = { sendPanel, sendAllPanels, art, PANEL_KEYS, RESENDABLE, SPACER };

@@ -15,7 +15,7 @@ const db = require('./db');
 const { embed, ok, fail, reply, modal, log, channel, isOwner, cut, ts } = require('./util');
 const { addWarn } = require('./protection/warns');
 const { setRaidMode } = require('./protection/antiraid');
-const { MEMBER_PERMS } = require('./setup');
+const { MEMBER_PERMS, beautify } = require('./setup');
 const { sendAllPanels, RESENDABLE } = require('./panels');
 const store = require('./store');
 
@@ -26,6 +26,8 @@ const definitions = [
     .addBooleanOption((o) => o.setName('reset').setDescription('حذف كل الرومات والرتب الحالية أولاً (للسيرفر الجديد)').setRequired(true))
     .setDefaultMemberPermissions(ADMIN),
   new SlashCommandBuilder().setName('panels').setDescription('إعادة إرسال القوانين والتحقق والتذاكر وطرق الدفع')
+    .setDefaultMemberPermissions(ADMIN),
+  new SlashCommandBuilder().setName('beautify').setDescription('تجميل السيرفر كامل: صور، وصف الرومات، شاشة الترحيب، كل الرسائل')
     .setDefaultMemberPermissions(ADMIN),
   new SlashCommandBuilder().setName('product').setDescription('إدارة منتجات المتجر').setDefaultMemberPermissions(ADMIN)
     .addSubcommand((s) => s.setName('add').setDescription('إضافة منتج')
@@ -115,6 +117,17 @@ const handlers = {
     await i.deferReply({ flags: MessageFlags.Ephemeral });
     await sendAllPanels(i.guild, RESENDABLE, { clear: true });
     return i.editReply('✅ تم إعادة إرسال الرسائل الثابتة.');
+  },
+
+  async beautify(i) {
+    await i.deferReply({ flags: MessageFlags.Ephemeral });
+    const lines = [];
+    const show = (m) => {
+      lines.push(`✅ ${m}`);
+      i.editReply(`🎨 جاري التجميل...\n${lines.join('\n')}`).catch(() => {});
+    };
+    const done = await beautify(i.guild, show);
+    return i.editReply(`🎨 **تم تجميل السيرفر • Server beautified**\n${done.map((d) => `✅ ${d}`).join('\n')}`);
   },
 
   product: (i) => store.handle(i),

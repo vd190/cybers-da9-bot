@@ -23,16 +23,24 @@ module.exports = {
 
   // طرق الدفع اللي تظهر في روم طرق الدفع — عدّلها حسب اللي عندك
   payments: [
-    { emoji: '💳', name: 'كروت', note: 'ترسل الكرت (الكود + صورته) داخل التذكرة فقط — نوع الكرت يتأكد منه قبل الدفع' },
-    { emoji: '🪙', name: 'USDT', note: 'عنوان المحفظة والشبكة يرسلون لك داخل التذكرة فقط' },
+    {
+      emoji: '💳', name: 'كروت', nameEn: 'Gift Cards',
+      note: 'ترسل الكرت (الكود + صورته) داخل التذكرة فقط — نتأكد من نوع الكرت قبل الدفع',
+      noteEn: 'Send the card (code + photo) inside your ticket only — we confirm the card type first',
+    },
+    {
+      emoji: '🪙', name: 'USDT', nameEn: 'Crypto',
+      note: 'عنوان المحفظة والشبكة يرسلون لك داخل التذكرة فقط',
+      noteEn: 'Wallet address and network are sent inside your ticket only',
+    },
   ],
 
   // أنواع التذاكر
   ticketTypes: [
-    { id: 'buy', label: 'شراء منتج', emoji: '🛒', style: 'Success', description: 'تبي تشتري منتج من المتجر' },
-    { id: 'support', label: 'دعم فني', emoji: '🛠️', style: 'Primary', description: 'مشكلة في منتج اشتريته' },
-    { id: 'question', label: 'استفسار', emoji: '❓', style: 'Secondary', description: 'سؤال قبل الشراء' },
-    { id: 'report', label: 'بلاغ', emoji: '⚠️', style: 'Danger', description: 'بلاغ عن محتال أو مشكلة' },
+    { id: 'buy', label: 'شراء منتج', labelEn: 'Buy', emoji: '🛒', style: 'Success', description: 'تبي تشتري منتج من المتجر', descriptionEn: 'Purchase a product' },
+    { id: 'support', label: 'دعم فني', labelEn: 'Support', emoji: '🛠️', style: 'Primary', description: 'مشكلة في منتج اشتريته', descriptionEn: 'Help with a product you bought' },
+    { id: 'question', label: 'استفسار', labelEn: 'Question', emoji: '❓', style: 'Secondary', description: 'سؤال قبل الشراء', descriptionEn: 'Ask before you buy' },
+    { id: 'report', label: 'بلاغ', labelEn: 'Report', emoji: '⚠️', style: 'Danger', description: 'بلاغ عن محتال أو مشكلة', descriptionEn: 'Report a scammer or an issue' },
   ],
 
   protection: {

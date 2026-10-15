@@ -329,6 +329,99 @@ async function runSetup(guild, { reset, progress = () => {} }) {
   return report;
 }
 
+// ───── التجميل: وصف الرومات، الرتب، شاشة الترحيب، إعادة إرسال كل الرسائل ─────
+const TOPICS = {
+  rules: '📜 اقرأ القوانين قبل أي شي • Read the rules first',
+  verify: '🛡️ اضغط تحقق عشان تنفتح لك الرومات • Click Verify to unlock the server',
+  announcements: '📢 كل جديد المتجر والعروض • Store news & offers',
+  welcome: '👋 ترحيب بالأعضاء الجدد • Welcoming new members',
+  products: '🛍️ اضغط 🛒 شراء تحت أي منتج • Click 🛒 Buy under any product',
+  payments: '💳 كروت و USDT فقط • Cards & USDT only',
+  howto: '📖 خطوات الشراء والشروط • How to buy & terms',
+  ticketPanel: '🎫 افتح تذكرة للشراء أو الدعم • Open a ticket to buy or get support',
+  reviews: '⭐ تقييمات عملاء حقيقيين • Real customer reviews',
+  chat: '💬 الشات العام — التزم بالقوانين • General chat — follow the rules',
+  commands: '🤖 أوامر البوت • Bot commands',
+  staff: '👑 لوحة الإدارة • Admin panel',
+};
+
+async function beautify(guild, progress = () => {}) {
+  const { sendPanel } = require('./panels');
+  const done = [];
+  const c = db.data.channels;
+
+  // 1) وصف الرومات بالعربي والإنجليزي
+  for (const [key, topic] of Object.entries(TOPICS)) {
+    const ch = guild.channels.cache.get(c[key]);
+    if (ch?.isTextBased() && ch.topic !== topic) await ch.setTopic(topic).catch(() => {});
+  }
+  done.push('📝 وصف الرومات • Channel topics');
+  progress(done.at(-1));
+
+  // 2) الرتب: الأعضاء يظهرون كمجموعة لحالهم في قائمة الأعضاء
+  const member = guild.roles.cache.get(db.data.roles.member);
+  if (member && !member.hoist) await member.setHoist(true).catch(() => {});
+  done.push('🎭 الرتب • Roles');
+  progress(done.at(-1));
+
+  // 3) مجتمع + شاشة ترحيب + وصف السيرفر
+  try {
+    if (!guild.features.includes('COMMUNITY')) {
+      await guild.edit({
+        features: [...guild.features, 'COMMUNITY'],
+        rulesChannel: c.rules,
+        publicUpdatesChannel: c.staff,
+        reason: 'Cybers DA9 beautify',
+      });
+    }
+    await guild.edit({
+      description: 'متجر Cybers DA9 الرسمي — كورسات وأدوات أمن سيبراني وذكاء اصطناعي • Official Cybers DA9 store',
+    }).catch(() => {});
+    const welcomeChannels = [
+      { channel: c.verify, emoji: '🛡️', description: 'تحقق أولاً • Verify first' },
+      { channel: c.rules, emoji: '📜', description: 'القوانين • Rules' },
+      { channel: c.products, emoji: '🛍️', description: 'المنتجات • Products' },
+      { channel: c.ticketPanel, emoji: '🎫', description: 'للشراء والدعم • Buy & support' },
+      { channel: c.payments, emoji: '💳', description: 'طرق الدفع • Payments' },
+    ].filter((w) => w.channel);
+    const description = 'حياك الله في Cybers DA9 🛒 تحقق وتصفح منتجاتنا • Welcome! Verify and browse our products';
+    await guild.editWelcomeScreen({ enabled: true, description, welcomeChannels })
+      .catch(() => guild.editWelcomeScreen({ enabled: true, description, welcomeChannels: welcomeChannels.slice(0, 2) }));
+    done.push('🏠 شاشة الترحيب • Welcome screen');
+  } catch (e) {
+    console.error('[beautify] community:', e.message);
+    done.push('⚠️ شاشة الترحيب ما اشتغلت • Welcome screen skipped');
+  }
+  progress(done.at(-1));
+
+  // 4) إعادة إرسال كل الرسائل بالشكل الجديد
+  for (const key of ['rules', 'verify', 'payments', 'howto', 'ticketPanel', 'staff']) {
+    await sendPanel(guild, key, { clear: true });
+  }
+  // الرسائل اللي فيها محتوى ثاني: نحذف رأس الصفحة القديم بس
+  for (const [key, re] of [['announcements', /افتتاح|Grand Opening/], ['reviews', /تقييمات العملاء/]]) {
+    const ch = guild.channels.cache.get(c[key]);
+    const msgs = await ch?.messages.fetch({ limit: 50 }).catch(() => null);
+    for (const m of msgs?.values() ?? []) {
+      if (m.author.id === guild.client.user.id && m.embeds.some((e) => re.test(e.title ?? ''))) await m.delete().catch(() => {});
+    }
+    await sendPanel(guild, key);
+  }
+  // المنتجات: رأس جديد ثم المنتجات تحته
+  const productsCh = guild.channels.cache.get(c.products);
+  if (productsCh) {
+    const msgs = await productsCh.messages.fetch({ limit: 100 }).catch(() => null);
+    for (const m of msgs?.values() ?? []) if (m.author.id === guild.client.user.id) await m.delete().catch(() => {});
+    await sendPanel(guild, 'products');
+    await require('./store').repostAll(guild);
+  }
+  done.push('🖼️ الرسائل والصور • Panels & images');
+  progress(done.at(-1));
+
+  await updateMemberCount(guild);
+  return done;
+}
+
 // يرجع صلاحيات كل الرومات لوضعها الأصلي (يستخدمه الـ Anti-Nuke)
 async function reapplyPermissions(guild) {
   for (const cat of LAYOUT) {
@@ -342,8 +435,8 @@ async function reapplyPermissions(guild) {
 async function updateMemberCount(guild) {
   const ch = guild.channels.cache.get(db.data.channels.memberCount);
   if (!ch) return;
-  const name = `👥・الأعضاء: ${guild.memberCount}`;
+  const name = `👥・الأعضاء • Members: ${guild.memberCount}`;
   if (ch.name !== name) await ch.setName(name).catch(() => {});
 }
 
-module.exports = { runSetup, setupAutoMod, reapplyPermissions, updateMemberCount, overwrites, MEMBER_PERMS, LAYOUT };
+module.exports = { runSetup, setupAutoMod, reapplyPermissions, updateMemberCount, beautify, overwrites, MEMBER_PERMS, LAYOUT };

@@ -18,14 +18,14 @@ const typeOf = (id) => config.ticketTypes.find((t) => t.id === id) ?? config.tic
 function openModal(i, typeId, productId) {
   const t = typeOf(typeId);
   const product = productId ? db.data.products.items[productId] : null;
-  if (productId && (!product || !product.available)) return fail(i, 'هذا المنتج غير متوفر حالياً.');
+  if (productId && (!product || !product.available)) return fail(i, 'هذا المنتج غير متوفر حالياً.\n*This product is currently unavailable.*');
   const existing = db.data.tickets.open[i.user.id];
-  if (existing && i.guild.channels.cache.has(existing)) return fail(i, `عندك تذكرة مفتوحة: <#${existing}>`);
+  if (existing && i.guild.channels.cache.has(existing)) return fail(i, `عندك تذكرة مفتوحة • You already have an open ticket: <#${existing}>`);
 
   const fields = product
-    ? [{ id: 'details', label: 'الكمية / ملاحظات', placeholder: 'مثال: 1', paragraph: true, required: false, max: 500 }]
-    : [{ id: 'details', label: 'اشرح طلبك', placeholder: t.description, paragraph: true, max: 1000, min: 3 }];
-  const title = product ? `شراء: ${product.name}` : `${t.emoji} ${t.label}`;
+    ? [{ id: 'details', label: 'الكمية / ملاحظات • Quantity / notes', placeholder: 'مثال • e.g. 1', paragraph: true, required: false, max: 500 }]
+    : [{ id: 'details', label: 'اشرح طلبك • Describe your request', placeholder: `${t.description} • ${t.descriptionEn}`, paragraph: true, max: 1000, min: 3 }];
+  const title = product ? `شراء • Buy: ${product.name}` : `${t.emoji} ${t.label} • ${t.labelEn}`;
   return i.showModal(modal(`ticket:create:${t.id}${product ? `:${productId}` : ''}`, title, fields));
 }
 
@@ -37,7 +37,7 @@ async function create(i, typeId, productId) {
   const details = i.fields.getTextInputValue('details');
 
   const existing = db.data.tickets.open[i.user.id];
-  if (existing && guild.channels.cache.has(existing)) return i.editReply(`❌ عندك تذكرة مفتوحة: <#${existing}>`);
+  if (existing && guild.channels.cache.has(existing)) return i.editReply(`❌ عندك تذكرة مفتوحة • You already have an open ticket: <#${existing}>`);
 
   const number = ++db.data.tickets.counter;
   db.save();
@@ -81,26 +81,28 @@ async function create(i, typeId, productId) {
   db.save();
 
   const e = embed()
-    .setTitle(`${t.emoji} تذكرة #${number} — ${t.label}`)
+    .setTitle(`${t.emoji} تذكرة • Ticket #${number} — ${t.label} • ${t.labelEn}`)
     .setDescription(
       [
         `أهلاً ${i.user} 👋`,
         'الإدارة بترد عليك بأقرب وقت، لا تسوي منشن متكرر.',
+        '*Staff will reply soon — please avoid repeated mentions.*',
         '',
         '⚠️ **لا تدفع لأي حساب إلا اللي ينرسل لك هنا من الإدارة.**',
+        '*Only pay to details sent here by staff.*',
       ].join('\n'),
     )
-    .addFields({ name: '📝 التفاصيل', value: cut(details, 1024) });
+    .addFields({ name: '📝 التفاصيل • Details', value: cut(details || '—', 1024) });
   if (product) {
     e.addFields(
-      { name: '🛍️ المنتج', value: product.name, inline: true },
-      { name: '💰 السعر', value: product.price, inline: true },
+      { name: '🛍️ المنتج • Product', value: product.name, inline: true },
+      { name: '💰 السعر • Price', value: product.price, inline: true },
     );
   }
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('ticket:close').setLabel('إغلاق').setEmoji('🔒').setStyle(ButtonStyle.Danger),
-    new ButtonBuilder().setCustomId('ticket:deliver').setLabel('تم التسليم (للإدارة)').setEmoji('✅').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId('ticket:close').setLabel('إغلاق • Close').setEmoji('🔒').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('ticket:deliver').setLabel('تم التسليم • Delivered (Staff)').setEmoji('✅').setStyle(ButtonStyle.Success),
   );
 
   await ch.send({
@@ -119,7 +121,7 @@ async function create(i, typeId, productId) {
       ...(product ? [{ name: 'المنتج', value: `${product.name} — ${product.price}` }] : []),
     ));
 
-  return i.editReply(`✅ انفتحت تذكرتك: ${ch}`);
+  return i.editReply(`✅ انفتحت تذكرتك • Your ticket is open: ${ch}`);
 }
 
 // ───── إغلاق ─────
@@ -128,9 +130,9 @@ function closeAsk(i) {
   if (!meta) return fail(i, 'هذا مو روم تذكرة.');
   if (i.user.id !== meta.userId && !isOwner(i.member)) return fail(i, 'ما تقدر تقفل هذي التذكرة.');
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('ticket:closeConfirm').setLabel('تأكيد الإغلاق').setEmoji('🔒').setStyle(ButtonStyle.Danger),
+    new ButtonBuilder().setCustomId('ticket:closeConfirm').setLabel('تأكيد الإغلاق • Confirm').setEmoji('🔒').setStyle(ButtonStyle.Danger),
   );
-  return reply(i, { embeds: [embed(config.colors.warn).setDescription('متأكد تبي تقفل التذكرة؟')], components: [row] });
+  return reply(i, { embeds: [embed(config.colors.warn).setDescription('متأكد تبي تقفل التذكرة؟\n*Close this ticket?*')], components: [row] });
 }
 
 async function fetchAll(ch) {
@@ -190,7 +192,7 @@ async function close(i) {
   meta.closing = true;
 
   await i.update({ components: [] }).catch(() => {});
-  await i.channel.send({ embeds: [embed(config.colors.danger).setDescription(`🔒 بيتم إغلاق التذكرة خلال 5 ثواني بواسطة ${i.user}`)] });
+  await i.channel.send({ embeds: [embed(config.colors.danger).setDescription(`🔒 بيتم إغلاق التذكرة خلال 5 ثواني بواسطة ${i.user}\n*Closing in 5 seconds…*`)] });
 
   const file = await transcript(i.channel, meta, i.user);
   const t = typeOf(meta.type);
@@ -211,8 +213,8 @@ async function close(i) {
     await user
       .send({
         embeds: [
-          embed().setTitle(`🎫 تذكرتك #${meta.number} انقفلت`).setDescription(
-            pending ? 'شكراً لتعاملك معنا 💙\nقيّم تجربتك من الأزرار تحت ⭐' : `شكراً لتواصلك مع **${config.serverName}** 💙`,
+          embed().setTitle(`🎫 تذكرتك انقفلت • Ticket #${meta.number} closed`).setDescription(
+            pending ? 'شكراً لتعاملك معنا 💙\nقيّم تجربتك من الأزرار تحت ⭐\n\n*Thanks for your order 💙 Rate us below ⭐*' : `شكراً لتواصلك مع **${config.serverName}** 💙\n*Thanks for contacting **${config.serverName}** 💙*`,
           ),
         ],
         components: pending ? [reviewRow(meta.orderId)] : [],
@@ -267,8 +269,8 @@ async function delivered(i) {
     content: `<@${meta.userId}>`,
     embeds: [
       embed(config.colors.success)
-        .setTitle('✅ تم تسليم طلبك')
-        .setDescription(`**${productName}** — ${price}\n\nشكراً لثقتك في **${config.serverName}** 💙\nقيّم تجربتك من الأزرار تحت ⭐`),
+        .setTitle('✅ تم تسليم طلبك • Order Delivered')
+        .setDescription(`**${productName}** — ${price}\n\nشكراً لثقتك في **${config.serverName}** 💙\nقيّم تجربتك من الأزرار تحت ⭐\n\n*Thank you for trusting **${config.serverName}** 💙 Rate your experience below ⭐*`),
     ],
     components: [reviewRow(orderId)],
   });
@@ -278,10 +280,10 @@ async function delivered(i) {
 // ───── التقييمات ─────
 function reviewAsk(i, orderId, stars) {
   const p = db.data.orders.pendingReviews[orderId];
-  if (!p) return fail(i, 'التقييم غير متاح أو تم التقييم من قبل.');
-  if (p.userId !== i.user.id) return fail(i, 'التقييم لصاحب الطلب فقط.');
+  if (!p) return fail(i, 'التقييم غير متاح أو تم التقييم من قبل.\n*Review unavailable or already submitted.*');
+  if (p.userId !== i.user.id) return fail(i, 'التقييم لصاحب الطلب فقط.\n*Only the buyer can review.*');
   return i.showModal(modal(`review:submit:${orderId}:${stars}`, `تقييمك ${'⭐'.repeat(stars)}`, [
-    { id: 'comment', label: 'اكتب رأيك (اختياري)', paragraph: true, required: false, max: 500 },
+    { id: 'comment', label: 'رأيك (اختياري) • Your review (optional)', paragraph: true, required: false, max: 500 },
   ]));
 }
 
@@ -302,11 +304,11 @@ async function reviewSubmit(i, orderId, stars) {
         embed(config.colors.gold)
           .setAuthor({ name: i.user.username, iconURL: i.user.displayAvatarURL() })
           .setTitle(`${'⭐'.repeat(stars)}${'☆'.repeat(5 - stars)}`)
-          .setDescription(comment ? `> ${cut(comment, 500)}` : '> بدون تعليق')
+          .setDescription(comment ? `> ${cut(comment, 500)}` : '> بدون تعليق • *No comment*')
           .addFields(
-            { name: '🛍️ المنتج', value: cut(p.product, 200), inline: true },
-            { name: '🧾 الطلب', value: `#${orderId}`, inline: true },
-            { name: '👤 العميل', value: `<@${i.user.id}>`, inline: true },
+            { name: '🛍️ المنتج • Product', value: cut(p.product, 200), inline: true },
+            { name: '🧾 الطلب • Order', value: `#${orderId}`, inline: true },
+            { name: '👤 العميل • Customer', value: `<@${i.user.id}>`, inline: true },
           ),
       ],
     }).then((m) => m.react('💙').catch(() => {})).catch(() => {});
@@ -314,9 +316,9 @@ async function reviewSubmit(i, orderId, stars) {
 
   if (i.isFromMessage()) {
     await i.update({ components: [] }).catch(() => {});
-    return i.followUp({ content: '💙 شكراً على تقييمك!', flags: MessageFlags.Ephemeral }).catch(() => {});
+    return i.followUp({ content: '💙 شكراً على تقييمك! • Thanks for your review!', flags: MessageFlags.Ephemeral }).catch(() => {});
   }
-  return ok(i, 'شكراً على تقييمك 💙');
+  return ok(i, 'شكراً على تقييمك 💙\n*Thanks for your review!*');
 }
 
 module.exports = { openModal, create, closeAsk, close, deliverAsk, delivered, reviewAsk, reviewSubmit };
