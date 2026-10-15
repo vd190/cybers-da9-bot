@@ -11,13 +11,14 @@ const imgPath = (p) => (p.imageFile ? path.join(IMG_DIR, p.imageFile) : null);
 
 function productEmbed(p) {
   const e = embed(p.available ? config.color : config.colors.danger)
-    .setTitle(`🛍️ ${p.name}`)
-    .setDescription(cut(p.description, 4000))
+    .setTitle(p.name)
+    .setDescription(cut(`${p.description}\n​`, 4000))
     .addFields(
-      { name: '💰 السعر', value: p.price, inline: true },
-      { name: '📦 الحالة', value: p.available ? '✅ متوفر' : '❌ نفذت الكمية', inline: true },
+      { name: '💰 السعر • Price', value: `**${p.price}**`, inline: true },
+      { name: '📦 الحالة • Status', value: p.available ? '✅ متوفر • Available' : '❌ نفذت الكمية • Sold out', inline: true },
+      { name: '​', value: '🛒 اضغط **شراء** تحت وبتنفتح لك تذكرة\n🛒 Click **Buy** below to open a ticket' },
     )
-    .setFooter({ text: `${config.serverName} • منتج #${p.id}` });
+    .setFooter({ text: `${config.serverName} • منتج / Product #${p.id}` });
   if (p.imageFile) e.setImage(`attachment://${p.imageFile}`);
   return e;
 }
@@ -26,7 +27,7 @@ function productRow(p) {
   return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(`buy:${p.id}`)
-      .setLabel(p.available ? 'شراء' : 'غير متوفر')
+      .setLabel(p.available ? 'شراء • Buy' : 'غير متوفر • Sold out')
       .setEmoji('🛒')
       .setStyle(p.available ? ButtonStyle.Success : ButtonStyle.Secondary)
       .setDisabled(!p.available),
@@ -56,7 +57,11 @@ async function repostAll(guild) {
   for (const p of Object.values(db.data.products.items)) await post(guild, p).catch(() => {});
 }
 
-const text = (s) => s?.replace(/\\n|\s\|\s/g, '\n');
+// | = سطر جديد ، || = سطر فاضي ، --- = خط فاصل
+const text = (s) => s
+  ?.replace(/\s*---\s*/g, '\n━━━━━━━━━━━━━━━━━━\n')
+  .replace(/\\n|\s*\|\s*/g, '\n')
+  .trim();
 
 async function handle(i) {
   const sub = i.options.getSubcommand();
