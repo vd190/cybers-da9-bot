@@ -10,14 +10,19 @@ const IMG_DIR = path.join(__dirname, '..', 'data', 'products');
 const imgPath = (p) => (p.imageFile ? path.join(IMG_DIR, p.imageFile) : null);
 
 function productEmbed(p) {
+  const line = '━━━━━━━━━━━━━━━━━━';
+  const status = p.available ? '✅ متوفر • Available' : '❌ نفذت الكمية • Sold out';
+  const details = [
+    line,
+    `💰 **السعر • Price:**  ${p.price}`,
+    `📦 **الحالة • Status:**  ${status}`,
+    line,
+    '🛒 اضغط **شراء** تحت وبتنفتح لك تذكرة',
+    '🛒 Click **Buy** below to open a ticket',
+  ].join('\n');
   const e = embed(p.available ? config.color : config.colors.danger)
     .setTitle(p.name)
-    .setDescription(cut(`${p.description}\n​`, 4000))
-    .addFields(
-      { name: '💰 السعر • Price', value: `**${p.price}**`, inline: true },
-      { name: '📦 الحالة • Status', value: p.available ? '✅ متوفر • Available' : '❌ نفذت الكمية • Sold out', inline: true },
-      { name: '​', value: '🛒 اضغط **شراء** تحت وبتنفتح لك تذكرة\n🛒 Click **Buy** below to open a ticket' },
-    )
+    .setDescription(`${cut(p.description, 3700)}\n\n${details}`)
     .setFooter({ text: `${config.serverName} • منتج / Product #${p.id}` });
   if (p.imageFile) e.setImage(`attachment://${p.imageFile}`);
   return e;
