@@ -24,7 +24,8 @@ function productEmbed(p) {
     .setTitle(p.name)
     .setDescription(`${cut(p.description, 3700)}\n\n${details}`)
     .setFooter({ text: `${config.serverName} • منتج / Product #${p.id}` });
-  if (p.imageFile) e.setImage(`attachment://${p.imageFile}`);
+  if (p.imageUrl) e.setImage(p.imageUrl);
+  else if (p.imageFile) e.setImage(`attachment://${p.imageFile}`);
   return e;
 }
 
@@ -112,6 +113,11 @@ async function handle(i) {
     p.name = i.options.getString('name') ?? p.name;
     p.price = i.options.getString('price') ?? p.price;
     p.description = text(i.options.getString('description')) ?? p.description;
+    const imageUrl = i.options.getString('image_url');
+    if (imageUrl) {
+      if (!/^https:\/\/\S+$/i.test(imageUrl)) return fail(i, 'رابط الصورة لازم يبدأ بـ https://');
+      p.imageUrl = imageUrl;
+    }
     db.save();
     await refresh(i.guild, p);
     return ok(i, `تم تعديل المنتج **${p.name}**`);

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<defs>
+  <radialGradient id="bg" cx="70%" cy="45%" r="80%"><stop offset="0" stop-color="#17134d"/><stop offset=".55" stop-color="#0a0b24"/><stop offset="1" stop-color="#03040a"/></radialGradient>
+  <linearGradient id="neon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff4fd8"/><stop offset="1" stop-color="#8a5bff"/></linearGradient>
+  <linearGradient id="txt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bdefff"/></linearGradient>
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="10" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#2a3a8a" stroke-width="1" opacity=".3"/></pattern>
+</defs>
+  <rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#grid)"/>
+  <rect x="0" y="665" width="1200" height="10" fill="url(#neon)"/>
+  <g stroke="url(#neon)" stroke-width="3" fill="none" opacity=".6" filter="url(#soft)"><path d="M0 90 H180 L230 40 H420"/><path d="M1200 600 H1000 L960 640 H760"/></g>
+  <g transform="translate(250,320)"><circle r="190" fill="none" stroke="url(#neon)" stroke-width="6" opacity=".35"/><circle r="150" fill="#070818" stroke="url(#neon)" stroke-width="8" filter="url(#glow)"/><rect x="-70" y="-60" width="140" height="120" rx="26" fill="#070818" stroke="url(#neon)" stroke-width="8" filter="url(#glow)"/>
+      <circle cx="-28" cy="-8" r="14" fill="url(#neon)"/><circle cx="28" cy="-8" r="14" fill="url(#neon)"/><path d="M-26 30 Q0 46 26 30" fill="none" stroke="#f3d9ff" stroke-width="7" stroke-linecap="round"/>
+      <line x1="0" y1="-60" x2="0" y2="-92" stroke="url(#neon)" stroke-width="6"/><circle cx="0" cy="-100" r="11" fill="url(#neon)"/>
+      <g fill="none" stroke="#f3d9ff" stroke-width="5" opacity=".9"><circle cx="-125" cy="-40" r="18"/><path d="M110 40 h40 v28 h-26 l-14 12 Z"/><path d="M-140 70 l18 -10 v20 Z"/></g></g>
+  <text x="1140" y="120" text-anchor="end" font-family="Bahnschrift" font-weight="700" font-size="24" letter-spacing="6" fill="#ff4fd8">AI SOCIAL MEDIA</text>
+  <text x="1140" y="240" text-anchor="end" font-family="Segoe UI" font-weight="700" font-size="48" fill="url(#txt)" filter="url(#soft)">موظف السوشل ميديا الذكي</text>
+  <rect x="780" y="275" width="360" height="5" rx="2.5" fill="url(#neon)"/>
+  <text x="1140" y="345" text-anchor="end" font-family="Segoe UI" font-weight="700" font-size="38" fill="#cfe9ff">Your AI Social Media Employee</text>
+  <g transform="translate(883,505)"><rect width="257" height="50" rx="25" fill="#0b1030" stroke="url(#neon)" stroke-width="2.5"/><text x="24" y="33" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">AI</text>
+      <circle cx="63" cy="25" r="3.5" fill="url(#neon)"/>
+      <text x="233" y="33" text-anchor="end" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">ذكاء اصطناعي</text></g><g transform="translate(625.5,505)"><rect width="241.5" height="50" rx="25" fill="#0b1030" stroke="url(#neon)" stroke-width="2.5"/><text x="24" y="33" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">Private</text>
+      <circle cx="125.5" cy="25" r="3.5" fill="url(#neon)"/>
+      <text x="217.5" y="33" text-anchor="end" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">خاص بك</text></g><g transform="translate(343.5,505)"><rect width="266" height="50" rx="25" fill="#0b1030" stroke="url(#neon)" stroke-width="2.5"/><text x="24" y="33" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">Automation</text>
+      <circle cx="163" cy="25" r="3.5" fill="url(#neon)"/>
+      <text x="242" y="33" text-anchor="end" font-family="Segoe UI" font-weight="700" font-size="21" fill="#e6f7ff">أتمتة</text></g>
+  <text x="1140" y="620" text-anchor="end" font-family="Bahnschrift" font-weight="700" font-size="22" letter-spacing="8" fill="#7f8ccf">CYBERS DA9</text>
+</svg>
