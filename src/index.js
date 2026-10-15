@@ -17,6 +17,8 @@ try {
 for (const arg of process.argv.slice(2)) {
   const m = arg.match(/^-{0,2}([A-Z_][A-Z0-9_]*)=(.+)$/i);
   if (m) process.env[m[1].toUpperCase()] = m[2];
+  // توكن ملصوق لحاله بدون TOKEN=
+  else if (/^[\w-]{20,}\.[\w-]{4,}\.[\w-]{20,}$/.test(arg)) process.env.TOKEN = arg;
 }
 process.env.GUILD_ID ||= '1559821910676869130';
 
