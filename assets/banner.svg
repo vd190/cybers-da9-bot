@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="560" viewBox="0 0 1600 560">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b0c2a"/>
+      <stop offset="0.6" stop-color="#070818"/>
+      <stop offset="1" stop-color="#14062a"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#00f0ff"/>
+      <stop offset="0.5" stop-color="#4f7bff"/>
+      <stop offset="1" stop-color="#b43cff"/>
+    </linearGradient>
+    <linearGradient id="txt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#7befff"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#2a3a8a" stroke-width="1" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="560" fill="url(#bg)"/>
+  <rect width="1600" height="560" fill="url(#grid)"/>
+  <g stroke="url(#neon)" stroke-width="4" fill="none" opacity="0.7" filter="url(#glow)">
+    <path d="M0 120 H260 L320 60 H520"/>
+    <path d="M1600 440 H1340 L1280 500 H1080"/>
+    <path d="M0 470 H180 L230 420 H330"/>
+    <path d="M1600 90 H1420 L1370 140 H1270"/>
+  </g>
+  <rect x="0" y="548" width="1600" height="12" fill="url(#neon)"/>
+  <text x="800" y="300" text-anchor="middle" font-family="Segoe UI Black" font-weight="900"
+        font-size="150" letter-spacing="10" fill="url(#txt)" filter="url(#glow)" opacity="0.9">CYBERS DA9</text>
+  <text x="800" y="300" text-anchor="middle" font-family="Segoe UI Black" font-weight="900"
+        font-size="150" letter-spacing="10" fill="url(#txt)">CYBERS DA9</text>
+  <rect x="560" y="338" width="480" height="5" rx="2.5" fill="url(#neon)"/>
+  <text x="800" y="410" text-anchor="middle" font-family="Segoe UI" font-weight="700"
+        font-size="46" fill="#cfe9ff">متجرك الموثوق · OFFICIAL STORE</text>
+</svg>

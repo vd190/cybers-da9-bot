@@ -1,0 +1,16 @@
+{
+  "name": "cybers-da9-bot",
+  "version": "1.0.0",
+  "description": "Cybers DA9 - all-in-one store, security and logs bot",
+  "main": "src/index.js",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=20.12"
+  },
+  "dependencies": {
+    "discord.js": "14.27.0"
+  }
+}
